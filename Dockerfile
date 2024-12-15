@@ -1,8 +1,8 @@
-FROM node:20.16.0-alpine AS base
+FROM node:18-alpine3.17 AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
-# 在较新版本的 Alpine 中使用 compat-openssl1.1 而非 openssl1.1-compat
+# 在 Alpine 3.17 中能使用 compat-openssl1.1 安装 OpenSSL 1.1 兼容库
 RUN apk add --no-cache compat-openssl1.1
 
 RUN npm i -g pnpm
@@ -11,14 +11,20 @@ FROM base AS build
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 
+# 使用 pnpm 的缓存提高依赖安装速度
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+
+# 构建项目
 RUN pnpm run -r build
 
+# 部署文件到 /app 和 /app-sqlite 目录中
 RUN pnpm deploy --filter=server --prod /app
 RUN pnpm deploy --filter=server --prod /app-sqlite
 
+# 为 /app 目录生成 Prisma Client
 RUN cd /app && pnpm exec prisma generate
 
+# 为 /app-sqlite 目录生成 Prisma Client
 RUN cd /app-sqlite && \
     rm -rf ./prisma && \
     mv prisma-sqlite prisma && \
