@@ -2,8 +2,8 @@ FROM node:20.16.0-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
-# 安装 openssl1.1 的兼容包
-RUN apk add --no-cache openssl1.1-compat
+# 在较新版本的 Alpine 中使用 compat-openssl1.1 而非 openssl1.1-compat
+RUN apk add --no-cache compat-openssl1.1
 
 RUN npm i -g pnpm
 
@@ -39,6 +39,7 @@ ENV DATABASE_URL="file:../data/wewe-rss.db"
 ENV DATABASE_TYPE="sqlite"
 
 RUN chmod +x ./docker-bootstrap.sh
+
 CMD ["./docker-bootstrap.sh"]
 
 
@@ -56,4 +57,5 @@ ENV AUTH_CODE=""
 ENV DATABASE_URL=""
 
 RUN chmod +x ./docker-bootstrap.sh
+
 CMD ["./docker-bootstrap.sh"]
